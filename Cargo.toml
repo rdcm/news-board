@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "admin-api",
+    "news-api",
+]
+
+[workspace.dependencies]
+tonic = "0.12.3"
+prost = "0.13.3"
+tokio = { version = "1", features = ["full"] }
+diesel = "2.2.4"
+tonic-build = "0.12.3"
