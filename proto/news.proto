@@ -1,7 +1,7 @@
 syntax = "proto3";
 package news;
 
-service News {
+service NewsService {
   rpc GetNews (GetNewsRequest) returns (NewsResponse);
 }
 

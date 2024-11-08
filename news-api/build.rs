@@ -16,7 +16,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .out_dir(out_dir)
         .compile_protos(&["../proto/news.proto"], &["../proto"])?;
 
-    println!("cargo:rustc-env=PROTO_OUT_DIR={}", format!("../{}", out_dir));
+    println!(
+        "cargo:rustc-env=PROTO_OUT_DIR={}",
+        format!("../{}", out_dir)
+    );
     println!("cargo:rerun-if-changed=../proto/news.proto");
 
     Ok(())

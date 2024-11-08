@@ -1,3 +1,6 @@
+format:
+	cargo fmt
+
 build-dev:
 	cargo build --all
 

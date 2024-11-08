@@ -1,34 +1,35 @@
-use news_api::news::news_server::{News, NewsServer};
-use news_api::news::{GetNewsRequest, NewsResponse};
-use tonic::{transport::Server, Request, Response, Status};
-
-#[derive(Debug, Default)]
-pub struct NewsService;
-
-#[tonic::async_trait]
-impl News for NewsService {
-    async fn get_news(
-        &self,
-        request: Request<GetNewsRequest>,
-    ) -> Result<Response<NewsResponse>, Status> {
-        let name = request.into_inner().name;
-        let reply = NewsResponse {
-            message: format!("Hello, {}!", name),
-        };
-        Ok(Response::new(reply))
-    }
-}
+use anyhow::Context;
+use config::{Config, Environment};
+use dotenvy::dotenv;
+use news_api::news::news_service_server::NewsServiceServer;
+use news_api::services::Services;
+use news_api::settings::Settings;
+use tonic::transport::Server;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse()?;
-    let news_service = NewsService::default();
+    _ = dotenv();
 
-    println!("GreeterServer listening on {}", addr);
+    let settings = Config::builder()
+        .add_source(Environment::with_prefix("NEWS_API").separator("__"))
+        .build()
+        .context("[news-api] [config] Failed to build config from env variables")?;
+
+    let settings: Settings = settings
+        .try_deserialize()
+        .context("[news-api] [config] Failed to deserialize config")?;
+
+    let services = Services::default();
+
+    let sock_addr = settings
+        .app
+        .get_sock_address()
+        .parse()
+        .context("[news-api] failed to parse socket address")?;
 
     Server::builder()
-        .add_service(NewsServer::new(news_service))
-        .serve(addr)
+        .add_service(NewsServiceServer::new(services))
+        .serve(sock_addr)
         .await?;
 
     Ok(())
