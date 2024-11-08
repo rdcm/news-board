@@ -1,4 +1,6 @@
+use anyhow::{Context, Result};
 use serde::Deserialize;
+use std::net::SocketAddr;
 
 #[derive(Debug, Deserialize)]
 pub struct Settings {
@@ -8,7 +10,6 @@ pub struct Settings {
 
 #[derive(Debug, Deserialize)]
 pub struct DbSettings {
-    pub db_name: String,
     pub uri: String,
 }
 
@@ -19,7 +20,9 @@ pub struct AppSettings {
 }
 
 impl AppSettings {
-    pub fn get_sock_address(&self) -> String {
+    pub fn get_sock_address(&self) -> Result<SocketAddr> {
         format!("{}:{}", self.host, self.port)
+            .parse()
+            .context("[news-api] failed to parse socket address")
     }
 }

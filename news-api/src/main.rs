@@ -19,13 +19,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .try_deserialize()
         .context("[news-api] [config] Failed to deserialize config")?;
 
-    let services = Services::default();
+    let services = Services::new(&settings.database.uri)?;
 
-    let sock_addr = settings
-        .app
-        .get_sock_address()
-        .parse()
-        .context("[news-api] failed to parse socket address")?;
+    let sock_addr = settings.app.get_sock_address()?;
 
     Server::builder()
         .add_service(NewsServiceServer::new(services))
