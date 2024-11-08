@@ -5,7 +5,7 @@ use diesel::sql_types::{Integer, Nullable, Text, Timestamp};
 
 #[derive(Queryable, Debug)]
 #[diesel(table_name = articles)]
-pub struct Article {
+pub struct ArticleEntry {
     pub id: i32,
     pub author_id: i32,
     pub title: String,
@@ -15,7 +15,7 @@ pub struct Article {
 
 #[derive(Insertable, Debug)]
 #[diesel(table_name = articles)]
-pub struct NewArticle<'a> {
+pub struct NewArticleEntry<'a> {
     pub author_id: i32,
     pub title: &'a str,
     pub content: &'a str,
@@ -23,7 +23,7 @@ pub struct NewArticle<'a> {
 
 #[derive(Queryable, QueryableByName, Selectable, Debug)]
 #[diesel(table_name = comments)]
-pub struct Comment {
+pub struct CommentEntry {
     #[diesel(sql_type = Integer)]
     pub id: i32,
     #[diesel(sql_type = Integer)]
@@ -40,7 +40,7 @@ pub struct Comment {
 
 #[derive(Insertable, Debug)]
 #[diesel(table_name = comments)]
-pub struct NewComment<'a> {
+pub struct NewCommentEntry<'a> {
     pub article_id: i32,
     pub user_id: Option<i32>,
     pub parent_id: Option<i32>,

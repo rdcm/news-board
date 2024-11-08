@@ -1,3 +1,6 @@
+lint:
+	cargo clippy
+
 format:
 	cargo fmt
 

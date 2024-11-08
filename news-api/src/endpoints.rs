@@ -1,20 +1,28 @@
-use crate::infrastructure::create_article;
+use crate::infrastructure::{create_article, get_articles_page};
+use crate::mappers::into_model;
 use crate::news::news_service_server::NewsService;
 use crate::news::*;
 use crate::services::Services;
+use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use tonic::{Code, Request, Response, Status};
 
 #[tonic::async_trait]
 impl NewsService for Services {
-    async fn get_news(
+    async fn get_articles(
         &self,
-        request: Request<GetNewsRequest>,
-    ) -> Result<Response<NewsResponse>, Status> {
-        let name = request.into_inner().name;
-        let reply = NewsResponse {
-            message: format!("Hello, {}!", name),
-        };
-        Ok(Response::new(reply))
+        request: Request<GetArticlesRequest>,
+    ) -> Result<Response<GetArticlesResponse>, Status> {
+        let req = request.into_inner();
+        let timestamp =
+            NaiveDateTime::parse_from_str(req.last_timestamp.as_str(), "%Y-%m-%d %H:%M:%S%.6f")
+                .ok();
+
+        match get_articles_page(&self.db_pool, timestamp, req.page_size) {
+            Ok(articles) => Ok(Response::new(GetArticlesResponse {
+                articles: articles.into_iter().map(into_model).collect(),
+            })),
+            Err(err) => Err(Status::new(Code::Internal, err.to_string())),
+        }
     }
 
     async fn create_article(
@@ -31,7 +39,7 @@ impl NewsService for Services {
             req.tags,
         ) {
             Ok(id) => Ok(Response::new(CreatedArticleResponse { article_id: id })),
-            Err(err) => Err(Status::new(Code::Unknown, "101")),
+            Err(_) => Err(Status::new(Code::Unknown, "101")),
         }
     }
 }

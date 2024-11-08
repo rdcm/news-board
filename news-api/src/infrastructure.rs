@@ -1,7 +1,8 @@
 use crate::services::DbPool;
 use anyhow::{Context, Result};
-use db_schema::models::{Article, Comment, NewComment};
+use db_schema::models::{ArticleEntry, CommentEntry, NewCommentEntry};
 use db_schema::schema::{article_tags, articles, comments, likes, tags};
+use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use diesel::sql_types::Integer;
 use diesel::{
     sql_query, BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, QueryDsl,
@@ -54,6 +55,27 @@ pub fn create_article(
     })
 }
 
+pub fn get_articles_page(
+    db_pool: &DbPool,
+    last_timestamp: Option<NaiveDateTime>,
+    page_size: i64,
+) -> Result<Vec<ArticleEntry>> {
+    let conn = &mut db_pool
+        .get()
+        .context("[news-api] failed retrieve db connection")?;
+
+    let mut query = articles::table
+        .order(articles::created_at.desc())
+        .limit(page_size)
+        .into_boxed();
+
+    if let Some(timestamp) = last_timestamp {
+        query = query.filter(articles::created_at.lt(timestamp));
+    }
+
+    query.load(conn).context("[news-api] failed load articles")
+}
+
 pub fn update_article(
     conn: &mut PgConnection,
     article_id: i32,
@@ -91,7 +113,7 @@ pub fn delete_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<u
     diesel::delete(articles::table.find(article_id)).execute(conn)
 }
 
-pub fn get_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<Article> {
+pub fn get_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<ArticleEntry> {
     articles::table.find(article_id).first(conn)
 }
 
@@ -102,7 +124,7 @@ pub fn add_comment(
     content: &str,
     parent_id: Option<i32>,
 ) -> QueryResult<i32> {
-    let new_comment = NewComment {
+    let new_comment = NewCommentEntry {
         article_id,
         user_id,
         parent_id,
@@ -147,7 +169,10 @@ pub fn remove_comment(
     .execute(conn)
 }
 
-pub fn get_comment_tree(conn: &mut PgConnection, article_id: i32) -> QueryResult<Vec<Comment>> {
+pub fn get_comment_tree(
+    conn: &mut PgConnection,
+    article_id: i32,
+) -> QueryResult<Vec<CommentEntry>> {
     sql_query(
         "
         WITH RECURSIVE comment_tree AS (
@@ -160,7 +185,7 @@ pub fn get_comment_tree(conn: &mut PgConnection, article_id: i32) -> QueryResult
         ",
     )
     .bind::<Integer, _>(article_id)
-    .load::<Comment>(conn)
+    .load::<CommentEntry>(conn)
 }
 
 pub fn like_article(conn: &mut PgConnection, article_id: i32, user_id: i32) -> QueryResult<usize> {

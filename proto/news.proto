@@ -3,7 +3,7 @@ syntax = "proto3";
 package news;
 
 service NewsService {
-  rpc GetNews (GetNewsRequest) returns (NewsResponse);
+  rpc GetArticles (GetArticlesRequest) returns (GetArticlesResponse);
   rpc CreateArticle(CreateArticleRequest) returns (CreatedArticleResponse);
 }
 
@@ -17,10 +17,18 @@ message CreatedArticleResponse {
   int32 article_id = 1;
 }
 
-message GetNewsRequest {
-  string name = 1;
+message GetArticlesRequest {
+  int64 page_size = 1;
+  string last_timestamp = 2;
 }
 
-message NewsResponse {
-  string message = 1;
+message Article {
+  string title = 1;
+  string content = 2;
+  string created_at = 3;
+  repeated string tags = 4;
+}
+
+message GetArticlesResponse {
+  repeated Article articles = 1;
 }

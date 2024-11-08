@@ -2,24 +2,22 @@ use std::fs;
 use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let out_dir = "../target/generated";
+    let generated_dir = "../target/generated";
 
-    if Path::new(out_dir).exists() {
-        fs::remove_dir_all(out_dir)?;
+    if Path::new(generated_dir).exists() {
+        fs::remove_dir_all(generated_dir)?;
     }
 
-    fs::create_dir_all(out_dir)?;
+    fs::create_dir_all(generated_dir)?;
 
     tonic_build::configure()
         .build_server(true)
         .build_client(true)
-        .out_dir(out_dir)
+        .out_dir(generated_dir)
         .compile_protos(&["../proto/news.proto"], &["../proto"])?;
 
-    println!(
-        "cargo:rustc-env=PROTO_OUT_DIR={}",
-        format!("../{}", out_dir)
-    );
+    let out_dir = format!("../{}", generated_dir);
+    println!("cargo:rustc-env=PROTO_OUT_DIR={}", out_dir);
     println!("cargo:rerun-if-changed=../proto/news.proto");
 
     Ok(())

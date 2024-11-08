@@ -1,5 +1,6 @@
 pub mod endpoints;
 pub mod infrastructure;
+pub mod mappers;
 pub mod services;
 pub mod settings;
 
