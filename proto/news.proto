@@ -1,8 +1,20 @@
 syntax = "proto3";
+
 package news;
 
 service NewsService {
   rpc GetNews (GetNewsRequest) returns (NewsResponse);
+  rpc CreateArticle(CreateArticleRequest) returns (CreatedArticleResponse);
+}
+
+message CreateArticleRequest {
+  string title = 1;
+  string content = 2;
+  repeated string tags = 3;
+}
+
+message CreatedArticleResponse {
+  int32 article_id = 1;
 }
 
 message GetNewsRequest {

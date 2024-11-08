@@ -1,7 +1,8 @@
+use crate::infrastructure::create_article;
 use crate::news::news_service_server::NewsService;
-use crate::news::{GetNewsRequest, NewsResponse};
+use crate::news::*;
 use crate::services::Services;
-use tonic::{Request, Response, Status};
+use tonic::{Code, Request, Response, Status};
 
 #[tonic::async_trait]
 impl NewsService for Services {
@@ -14,5 +15,23 @@ impl NewsService for Services {
             message: format!("Hello, {}!", name),
         };
         Ok(Response::new(reply))
+    }
+
+    async fn create_article(
+        &self,
+        request: Request<CreateArticleRequest>,
+    ) -> Result<Response<CreatedArticleResponse>, Status> {
+        let req = request.into_inner();
+
+        match create_article(
+            &self.db_pool,
+            1, // TODO remove hardcode, after adding auth
+            req.title.as_str(),
+            req.content.as_str(),
+            req.tags,
+        ) {
+            Ok(id) => Ok(Response::new(CreatedArticleResponse { article_id: id })),
+            Err(err) => Err(Status::new(Code::Unknown, "101")),
+        }
     }
 }

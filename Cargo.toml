@@ -13,7 +13,7 @@ chrono = "0.4.38"
 tonic = "0.12.3"
 prost = "0.13.3"
 tokio = { version = "1", features = ["full"] }
-diesel = { version =  "2.2.4", features = ["postgres", "chrono"] }
+diesel = { version =  "2.2.4", features = ["postgres", "chrono", "r2d2"] }
 dotenvy = "0.15.7"
 tonic-build = "0.12.3"
 serde = { version = "1.0.214", features = ["derive"] }

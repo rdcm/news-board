@@ -1,3 +1,5 @@
+use crate::services::DbPool;
+use anyhow::{Context, Result};
 use db_schema::models::{Article, Comment, NewComment};
 use db_schema::schema::{article_tags, articles, comments, likes, tags};
 use diesel::sql_types::Integer;
@@ -7,14 +9,23 @@ use diesel::{
 };
 
 pub fn create_article(
-    conn: &mut PgConnection,
+    db_pool: &DbPool,
+    author_id: i32,
     title: &str,
     content: &str,
     tag_names: Vec<String>,
-) -> QueryResult<i32> {
+) -> Result<i32> {
+    let conn = &mut db_pool
+        .get()
+        .context("[news-api] failed retrieve db connection")?;
+
     conn.transaction(|conn| {
         let article_id = diesel::insert_into(articles::table)
-            .values((articles::title.eq(title), articles::content.eq(content)))
+            .values((
+                articles::title.eq(title),
+                articles::content.eq(content),
+                articles::author_id.eq(author_id),
+            ))
             .returning(articles::id)
             .get_result::<i32>(conn)?;
 

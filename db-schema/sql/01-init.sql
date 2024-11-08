@@ -59,3 +59,6 @@ CREATE TABLE comments (
 CREATE INDEX idx_comments_article_id ON comments (article_id);
 CREATE INDEX idx_comments_parent_id ON comments (parent_id);
 CREATE INDEX idx_comments_created_at ON comments (created_at);
+
+-- bootstrap
+INSERT INTO users VALUES (1, 'rdcm', 'rdcm@protonmail.ch')
