@@ -5,6 +5,7 @@ edition="2021"
 license = "MIT"
 
 [dependencies]
+db-schema = { path = "../db-schema" }
 anyhow = { workspace = true }
 tonic = { workspace = true }
 prost = { workspace = true }

@@ -3,15 +3,20 @@ resolver = "2"
 members = [
     "admin-api",
     "news-api",
+    "db-schema",
 ]
 
 [workspace.dependencies]
 anyhow = "1.0.86"
 config = "0.14.0"
+chrono = "0.4.38"
 tonic = "0.12.3"
 prost = "0.13.3"
 tokio = { version = "1", features = ["full"] }
-diesel = { version =  "2.2.4", features = ["postgres"] }
+diesel = { version =  "2.2.4", features = ["postgres", "chrono"] }
 dotenvy = "0.15.7"
 tonic-build = "0.12.3"
 serde = { version = "1.0.214", features = ["derive"] }
+
+#[dev-dependencies]
+#diesel_cli = { version = "2.2", features = ["postgres"] }

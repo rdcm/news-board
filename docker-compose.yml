@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
-      - ./db-schema:/docker-entrypoint-initdb.d:ro
+      - ./db-schema/sql:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     networks:
