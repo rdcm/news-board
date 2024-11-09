@@ -75,8 +75,8 @@ pub fn get_articles_page(
             articles.created_at,
             array_agg(tags.name) AS tags
         FROM articles
-                 LEFT JOIN article_tags ON articles.id = article_tags.article_id
-                 LEFT JOIN tags ON tags.id = article_tags.tag_id
+            LEFT JOIN article_tags ON articles.id = article_tags.article_id
+            LEFT JOIN tags ON tags.id = article_tags.tag_id
         WHERE articles.created_at < $1
         GROUP BY articles.id, articles.created_at
         ORDER BY articles.created_at DESC
@@ -127,8 +127,12 @@ pub fn delete_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<u
     diesel::delete(articles::table.find(article_id)).execute(conn)
 }
 
-pub fn get_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<ArticleEntry> {
-    sql_query(
+pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
+    let conn = &mut db_pool
+        .get()
+        .context("[news-api] failed retrieve db connection")?;
+
+    let article = sql_query(
         r#"
         SELECT
             articles.id,
@@ -138,15 +142,17 @@ pub fn get_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<Arti
             articles.created_at,
             array_agg(tags.name) AS tags
         FROM articles
-        LEFT JOIN article_tags ON articles.id = article_tags.article_id
-        LEFT JOIN tags ON tags.id = article_tags.tag_id
+            LEFT JOIN article_tags ON articles.id = article_tags.article_id
+            LEFT JOIN tags ON tags.id = article_tags.tag_id
         WHERE articles.id = $1
-        GROUP BY articles.id,
+        GROUP BY articles.id
         LIMIT 1
     "#,
     )
     .bind::<Integer, _>(article_id)
-    .get_result(conn)
+    .get_result::<ArticleEntry>(conn)?;
+
+    Ok(article)
 }
 
 pub fn add_comment(

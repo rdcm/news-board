@@ -1,4 +1,4 @@
-use crate::infrastructure::{create_article, get_articles_page};
+use crate::infrastructure::{create_article, get_article, get_articles_page};
 use crate::mappers::into_model;
 use crate::news::news_service_server::NewsService;
 use crate::news::*;
@@ -8,6 +8,18 @@ use tonic::{Code, Request, Response, Status};
 
 #[tonic::async_trait]
 impl NewsService for Services {
+    async fn get_article(
+        &self,
+        request: Request<GetArticleRequest>,
+    ) -> Result<Response<GetArticleResponse>, Status> {
+        let req = request.into_inner();
+
+        match get_article(&self.db_pool, req.article_id) {
+            Ok(article) => Ok(Response::new(GetArticleResponse { article: Some(into_model(article)) })),
+            Err(_) => Err(Status::new(Code::Unknown, "101")),
+        }
+    }
+
     async fn get_articles(
         &self,
         request: Request<GetArticlesRequest>,
@@ -21,7 +33,7 @@ impl NewsService for Services {
             Ok(articles) => Ok(Response::new(GetArticlesResponse {
                 articles: articles.into_iter().map(into_model).collect(),
             })),
-            Err(err) => Err(Status::new(Code::Internal, err.to_string())),
+            Err(_) => Err(Status::new(Code::Unknown, "102")),
         }
     }
 
@@ -39,7 +51,7 @@ impl NewsService for Services {
             req.tags,
         ) {
             Ok(id) => Ok(Response::new(CreatedArticleResponse { article_id: id })),
-            Err(_) => Err(Status::new(Code::Unknown, "101")),
+            Err(_) => Err(Status::new(Code::Unknown, "103")),
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::schema::{comments};
+use crate::schema::comments;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::sql_types::{Array, Integer, Nullable, Text, Timestamp};

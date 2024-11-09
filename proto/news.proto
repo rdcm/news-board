@@ -3,23 +3,9 @@ syntax = "proto3";
 package news;
 
 service NewsService {
+  rpc GetArticle (GetArticleRequest) returns (GetArticleResponse);
   rpc GetArticles (GetArticlesRequest) returns (GetArticlesResponse);
   rpc CreateArticle(CreateArticleRequest) returns (CreatedArticleResponse);
-}
-
-message CreateArticleRequest {
-  string title = 1;
-  string content = 2;
-  repeated string tags = 3;
-}
-
-message CreatedArticleResponse {
-  int32 article_id = 1;
-}
-
-message GetArticlesRequest {
-  int64 page_size = 1;
-  string last_timestamp = 2;
 }
 
 message Article {
@@ -31,6 +17,29 @@ message Article {
   repeated string tags = 6;
 }
 
+message GetArticleRequest {
+  int32 article_id = 1;
+}
+
+message GetArticleResponse {
+  Article article = 1;
+}
+
+message GetArticlesRequest {
+  int64 page_size = 1;
+  string last_timestamp = 2;
+}
+
 message GetArticlesResponse {
   repeated Article articles = 1;
+}
+
+message CreateArticleRequest {
+  string title = 1;
+  string content = 2;
+  repeated string tags = 3;
+}
+
+message CreatedArticleResponse {
+  int32 article_id = 1;
 }
