@@ -1,24 +1,23 @@
-use crate::schema::{articles, comments};
+use crate::schema::{comments};
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::sql_types::{Integer, Nullable, Text, Timestamp};
+use diesel::sql_types::{Array, Integer, Nullable, Text, Timestamp};
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, QueryableByName, Debug)]
 #[diesel(table_name = articles)]
 pub struct ArticleEntry {
+    #[diesel(sql_type = Integer)]
     pub id: i32,
+    #[diesel(sql_type = Integer)]
     pub author_id: i32,
+    #[diesel(sql_type = Text)]
     pub title: String,
+    #[diesel(sql_type = Text)]
     pub content: String,
+    #[diesel(sql_type = Timestamp)]
     pub created_at: NaiveDateTime,
-}
-
-#[derive(Insertable, Debug)]
-#[diesel(table_name = articles)]
-pub struct NewArticleEntry<'a> {
-    pub author_id: i32,
-    pub title: &'a str,
-    pub content: &'a str,
+    #[diesel(sql_type = Array<Text>)]
+    pub tags: Vec<String>,
 }
 
 #[derive(Queryable, QueryableByName, Selectable, Debug)]

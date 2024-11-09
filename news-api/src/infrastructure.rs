@@ -2,7 +2,7 @@ use crate::services::DbPool;
 use anyhow::{Context, Result};
 use db_schema::models::{ArticleEntry, CommentEntry, NewCommentEntry};
 use db_schema::schema::{article_tags, articles, comments, likes, tags};
-use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
+use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::Integer;
 use diesel::{
     sql_query, BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, QueryDsl,
@@ -64,16 +64,30 @@ pub fn get_articles_page(
         .get()
         .context("[news-api] failed retrieve db connection")?;
 
-    let mut query = articles::table
-        .order(articles::created_at.desc())
-        .limit(page_size)
-        .into_boxed();
+    let timestamp = last_timestamp.unwrap_or_else(|| Utc::now().naive_utc());
+    let articles = sql_query(
+        r#"
+        SELECT
+            articles.id,
+            articles.author_id,
+            articles.title,
+            articles.content,
+            articles.created_at,
+            array_agg(tags.name) AS tags
+        FROM articles
+                 LEFT JOIN article_tags ON articles.id = article_tags.article_id
+                 LEFT JOIN tags ON tags.id = article_tags.tag_id
+        WHERE articles.created_at < $1
+        GROUP BY articles.id, articles.created_at
+        ORDER BY articles.created_at DESC
+        LIMIT $2
+    "#,
+    )
+    .bind::<diesel::sql_types::Timestamp, _>(timestamp)
+    .bind::<diesel::sql_types::Int8, _>(page_size)
+    .load::<ArticleEntry>(conn)?;
 
-    if let Some(timestamp) = last_timestamp {
-        query = query.filter(articles::created_at.lt(timestamp));
-    }
-
-    query.load(conn).context("[news-api] failed load articles")
+    Ok(articles)
 }
 
 pub fn update_article(
@@ -114,7 +128,25 @@ pub fn delete_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<u
 }
 
 pub fn get_article(conn: &mut PgConnection, article_id: i32) -> QueryResult<ArticleEntry> {
-    articles::table.find(article_id).first(conn)
+    sql_query(
+        r#"
+        SELECT
+            articles.id,
+            articles.author_id,
+            articles.title,
+            articles.content,
+            articles.created_at,
+            array_agg(tags.name) AS tags
+        FROM articles
+        LEFT JOIN article_tags ON articles.id = article_tags.article_id
+        LEFT JOIN tags ON tags.id = article_tags.tag_id
+        WHERE articles.id = $1
+        GROUP BY articles.id,
+        LIMIT 1
+    "#,
+    )
+    .bind::<Integer, _>(article_id)
+    .get_result(conn)
 }
 
 pub fn add_comment(
