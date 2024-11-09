@@ -20,6 +20,12 @@ pub struct ArticleEntry {
     pub tags: Vec<String>,
 }
 
+#[derive(QueryableByName)]
+pub struct ArticleId {
+    #[diesel(sql_type = Integer)]
+    pub id: i32,
+}
+
 #[derive(Queryable, QueryableByName, Selectable, Debug)]
 #[diesel(table_name = comments)]
 pub struct CommentEntry {

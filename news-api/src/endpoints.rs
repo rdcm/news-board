@@ -15,7 +15,9 @@ impl NewsService for Services {
         let req = request.into_inner();
 
         match get_article(&self.db_pool, req.article_id) {
-            Ok(article) => Ok(Response::new(GetArticleResponse { article: Some(into_model(article)) })),
+            Ok(article) => Ok(Response::new(GetArticleResponse {
+                article: Some(into_model(article)),
+            })),
             Err(_) => Err(Status::new(Code::Unknown, "101")),
         }
     }
@@ -50,7 +52,9 @@ impl NewsService for Services {
             req.content.as_str(),
             req.tags,
         ) {
-            Ok(id) => Ok(Response::new(CreatedArticleResponse { article_id: id })),
+            Ok(article_id) => Ok(Response::new(CreatedArticleResponse {
+                article_id: article_id.id,
+            })),
             Err(_) => Err(Status::new(Code::Unknown, "103")),
         }
     }

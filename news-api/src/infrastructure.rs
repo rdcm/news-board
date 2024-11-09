@@ -1,9 +1,9 @@
 use crate::services::DbPool;
 use anyhow::{Context, Result};
-use db_schema::models::{ArticleEntry, CommentEntry, NewCommentEntry};
+use db_schema::models::{ArticleEntry, ArticleId, CommentEntry, NewCommentEntry};
 use db_schema::schema::{article_tags, articles, comments, likes, tags};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
-use diesel::sql_types::Integer;
+use diesel::sql_types::{Array, Int4, Int8, Integer, Text, Timestamp};
 use diesel::{
     sql_query, BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, QueryDsl,
     QueryResult, RunQueryDsl,
@@ -15,44 +15,41 @@ pub fn create_article(
     title: &str,
     content: &str,
     tag_names: Vec<String>,
-) -> Result<i32> {
+) -> Result<ArticleId> {
     let conn = &mut db_pool
         .get()
-        .context("[news-api] failed retrieve db connection")?;
+        .context("[news-api] failed to retrieve db connection")?;
 
-    conn.transaction(|conn| {
-        let article_id = diesel::insert_into(articles::table)
-            .values((
-                articles::title.eq(title),
-                articles::content.eq(content),
-                articles::author_id.eq(author_id),
-            ))
-            .returning(articles::id)
-            .get_result::<i32>(conn)?;
+    let article_id = sql_query(
+        r#"
+        WITH inserted_article AS (
+            INSERT INTO articles (author_id, title, content)
+                VALUES ($1, $2, $3)
+                RETURNING id
+        ),
+        inserted_tags AS (
+             INSERT INTO tags (name)
+                 SELECT unnest($4::text[])
+                 ON CONFLICT (name) DO UPDATE
+                     SET name = EXCLUDED.name
+                 RETURNING id, name
+         ),
+         article_tag_associations AS (
+             INSERT INTO article_tags (article_id, tag_id)
+                 SELECT inserted_article.id, inserted_tags.id
+                 FROM inserted_article, inserted_tags
+         )
+        SELECT inserted_article.id
+        FROM inserted_article;
+    "#,
+    )
+    .bind::<Int4, _>(author_id)
+    .bind::<Text, _>(title)
+    .bind::<Text, _>(content)
+    .bind::<Array<Text>, _>(tag_names)
+    .get_result::<ArticleId>(conn)?;
 
-        for tag in &tag_names {
-            diesel::insert_into(tags::table)
-                .values(tags::name.eq(tag))
-                .on_conflict_do_nothing()
-                .execute(conn)?;
-        }
-
-        for tag_name in tag_names {
-            let tag_id = tags::table
-                .select(tags::id)
-                .filter(tags::name.eq(&tag_name))
-                .first::<i32>(conn)?;
-
-            diesel::insert_into(article_tags::table)
-                .values((
-                    article_tags::article_id.eq(article_id),
-                    article_tags::tag_id.eq(tag_id),
-                ))
-                .execute(conn)?;
-        }
-
-        Ok(article_id)
-    })
+    Ok(article_id)
 }
 
 pub fn get_articles_page(
@@ -83,8 +80,8 @@ pub fn get_articles_page(
         LIMIT $2
     "#,
     )
-    .bind::<diesel::sql_types::Timestamp, _>(timestamp)
-    .bind::<diesel::sql_types::Int8, _>(page_size)
+    .bind::<Timestamp, _>(timestamp)
+    .bind::<Int8, _>(page_size)
     .load::<ArticleEntry>(conn)?;
 
     Ok(articles)
