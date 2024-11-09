@@ -6,6 +6,7 @@ service NewsService {
   rpc GetArticle (GetArticleRequest) returns (GetArticleResponse);
   rpc GetArticles (GetArticlesRequest) returns (GetArticlesResponse);
   rpc CreateArticle(CreateArticleRequest) returns (CreatedArticleResponse);
+  rpc DeleteArticle(DeleteArticleRequest) returns (DeleteArticleResponse);
 }
 
 message Article {
@@ -43,3 +44,9 @@ message CreateArticleRequest {
 message CreatedArticleResponse {
   int32 article_id = 1;
 }
+
+message DeleteArticleRequest {
+  int32 article_id = 1;
+}
+
+message DeleteArticleResponse {}

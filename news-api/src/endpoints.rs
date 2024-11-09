@@ -1,4 +1,4 @@
-use crate::infrastructure::{create_article, get_article, get_articles_page};
+use crate::infrastructure::{create_article, delete_article, get_article, get_articles_page};
 use crate::mappers::into_model;
 use crate::news::news_service_server::NewsService;
 use crate::news::*;
@@ -56,6 +56,18 @@ impl NewsService for Services {
                 article_id: article_id.id,
             })),
             Err(_) => Err(Status::new(Code::Unknown, "103")),
+        }
+    }
+
+    async fn delete_article(
+        &self,
+        request: Request<DeleteArticleRequest>,
+    ) -> Result<Response<DeleteArticleResponse>, Status> {
+        let req = request.into_inner();
+
+        match delete_article(&self.db_pool, req.article_id) {
+            Ok(_) => Ok(Response::new(DeleteArticleResponse {})),
+            Err(_) => Err(Status::new(Code::Unknown, "104")),
         }
     }
 }
