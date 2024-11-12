@@ -65,7 +65,11 @@ impl NewsService for Services {
     ) -> Result<Response<DeleteArticleResponse>, Status> {
         let req = request.into_inner();
 
-        match delete_article(&self.db_pool, req.article_id) {
+        match delete_article(
+            &self.db_pool,
+            1, // TODO remove hardcode, after adding auth,
+            req.article_id,
+        ) {
             Ok(_) => Ok(Response::new(DeleteArticleResponse {})),
             Err(_) => Err(Status::new(Code::Unknown, "104")),
         }

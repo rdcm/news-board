@@ -120,32 +120,38 @@ pub fn update_article(
     })
 }
 
-pub fn delete_article(db_pool: &DbPool, article_id: i32) -> Result<()> {
+pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Result<()> {
     let conn = &mut db_pool
         .get()
         .context("[news-api] failed retrieve db connection")?;
 
-    sql_query(
+    let query = format!(
         r#"
-        WITH deleted_article_tags AS (
-            DELETE FROM article_tags
-            WHERE article_id = $1
-            RETURNING tag_id
-        ),
-        deleted_tags AS (
+        DO $$
+        DECLARE
+            target_article_id INTEGER := {};
+            target_author_id INTEGER := {};
+        BEGIN
+            CREATE TEMP TABLE tags_ids_to_delete AS
+            SELECT tag_id FROM article_tags
+            WHERE article_tags.article_id = target_article_id;
+
+            DELETE FROM articles
+            WHERE articles.id = target_article_id AND articles.author_id = target_author_id;
+
             DELETE FROM tags
-            WHERE id IN (SELECT tag_id FROM deleted_article_tags)
-            AND NOT EXISTS (
-                SELECT 1 FROM article_tags WHERE tag_id = tags.id
-            )
-            RETURNING id
-        )
-        DELETE FROM articles
-        WHERE id = $1;
-    "#,
-    )
-    .bind::<Integer, _>(article_id)
-    .execute(conn)?;
+            WHERE tags.id IN (SELECT tag_id FROM tags_ids_to_delete)
+              AND NOT EXISTS (
+                SELECT 1 FROM article_tags WHERE article_tags.tag_id = tags.id
+            );
+
+            DROP TABLE tags_ids_to_delete;
+        END $$;
+        "#,
+        article_id, author_id
+    );
+
+    sql_query(query).execute(conn)?;
 
     Ok(())
 }
