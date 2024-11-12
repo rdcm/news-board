@@ -1,11 +1,11 @@
 use crate::services::DbPool;
 use anyhow::{Context, Result};
-use db_schema::models::{ArticleEntry, ArticleId, CommentEntry, NewCommentEntry};
-use db_schema::schema::{article_tags, articles, comments, likes, tags};
+use db_schema::models::{ArticleEntry, ArticleId};
+use db_schema::schema::{article_tags, articles, tags};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Array, Int4, Int8, Integer, Text, Timestamp};
 use diesel::{
-    sql_query, BoolExpressionMethods, Connection, ExpressionMethods, PgConnection, QueryDsl,
+    sql_query, Connection, ExpressionMethods, PgConnection, QueryDsl,
     QueryResult, RunQueryDsl,
 };
 
@@ -182,97 +182,4 @@ pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
     .get_result::<ArticleEntry>(conn)?;
 
     Ok(article)
-}
-
-pub fn add_comment(
-    conn: &mut PgConnection,
-    article_id: i32,
-    user_id: Option<i32>,
-    content: &str,
-    parent_id: Option<i32>,
-) -> QueryResult<i32> {
-    let new_comment = NewCommentEntry {
-        article_id,
-        user_id,
-        parent_id,
-        content,
-    };
-
-    diesel::insert_into(comments::table)
-        .values(new_comment)
-        .returning(comments::id)
-        .get_result(conn)
-}
-
-pub fn update_comment(
-    conn: &mut PgConnection,
-    comment_id: i32,
-    user_id: i32,
-    content: &str,
-) -> QueryResult<usize> {
-    diesel::update(
-        comments::table.filter(
-            comments::id
-                .eq(comment_id)
-                .and(comments::user_id.eq(user_id)),
-        ),
-    )
-    .set(comments::content.eq(content))
-    .execute(conn)
-}
-
-pub fn remove_comment(
-    conn: &mut PgConnection,
-    comment_id: i32,
-    user_id: i32,
-) -> QueryResult<usize> {
-    diesel::delete(
-        comments::table.filter(
-            comments::id
-                .eq(comment_id)
-                .and(comments::user_id.eq(user_id)),
-        ),
-    )
-    .execute(conn)
-}
-
-pub fn get_comment_tree(
-    conn: &mut PgConnection,
-    article_id: i32,
-) -> QueryResult<Vec<CommentEntry>> {
-    sql_query(
-        "
-        WITH RECURSIVE comment_tree AS (
-            SELECT * FROM comments WHERE news_id = $1 AND parent_comment_id IS NULL
-            UNION ALL
-            SELECT c.* FROM comments c
-            JOIN comment_tree ct ON c.parent_comment_id = ct.id
-        )
-        SELECT * FROM comment_tree;
-        ",
-    )
-    .bind::<Integer, _>(article_id)
-    .load::<CommentEntry>(conn)
-}
-
-pub fn like_article(conn: &mut PgConnection, article_id: i32, user_id: i32) -> QueryResult<usize> {
-    diesel::insert_into(likes::table)
-        .values((likes::article_id.eq(article_id), likes::user_id.eq(user_id)))
-        .on_conflict_do_nothing()
-        .execute(conn)
-}
-
-pub fn unlike_article(
-    conn: &mut PgConnection,
-    article_id: i32,
-    user_id: i32,
-) -> QueryResult<usize> {
-    diesel::delete(
-        likes::table.filter(
-            likes::article_id
-                .eq(article_id)
-                .and(likes::user_id.eq(user_id)),
-        ),
-    )
-    .execute(conn)
 }
