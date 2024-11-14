@@ -1,13 +1,9 @@
 use crate::services::DbPool;
 use anyhow::{Context, Result};
 use db_schema::models::{ArticleEntry, ArticleId};
-use db_schema::schema::{article_tags, articles, tags};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
-use diesel::sql_types::{Array, Int4, Int8, Integer, Text, Timestamp};
-use diesel::{
-    sql_query, Connection, ExpressionMethods, PgConnection, QueryDsl,
-    QueryResult, RunQueryDsl,
-};
+use diesel::sql_types::{Array, Int8, Integer, Text, Timestamp};
+use diesel::{sql_query, RunQueryDsl};
 
 pub fn create_article(
     db_pool: &DbPool,
@@ -43,7 +39,7 @@ pub fn create_article(
         FROM inserted_article;
     "#,
     )
-    .bind::<Int4, _>(author_id)
+    .bind::<Integer, _>(author_id)
     .bind::<Text, _>(title)
     .bind::<Text, _>(content)
     .bind::<Array<Text>, _>(tag_names)
@@ -88,36 +84,76 @@ pub fn get_articles_page(
 }
 
 pub fn update_article(
-    conn: &mut PgConnection,
+    db_pool: &DbPool,
+    author_id: i32,
     article_id: i32,
     title: &str,
     content: &str,
     tag_names: Vec<String>,
-) -> QueryResult<()> {
-    conn.transaction(|conn| {
-        diesel::update(articles::table.find(article_id))
-            .set((articles::title.eq(title), articles::content.eq(content)))
-            .execute(conn)?;
+) -> Result<()> {
+    let conn = &mut db_pool
+        .get()
+        .context("[news-api] failed retrieve db connection")?;
 
-        diesel::delete(article_tags::table.filter(article_tags::article_id.eq(article_id)))
-            .execute(conn)?;
+    sql_query(
+        r#"
+        WITH updated_article AS (
+            UPDATE articles
+            SET title = $1, content = $2
+            WHERE id = $4 AND author_id = $3
+            RETURNING id
+        ),
+        existing_tags AS (
+            SELECT t.id, t.name
+            FROM tags t
+            JOIN article_tags at ON t.id = at.tag_id
+            WHERE at.article_id = $4
+        ),
+        new_tags AS (
+            INSERT INTO tags (name)
+            SELECT unnest($5::text[])
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id, name
+        ),
+        tags_to_add AS (
+            SELECT nt.id, nt.name
+            FROM new_tags nt
+            LEFT JOIN existing_tags et ON nt.name = et.name
+            WHERE et.id IS NULL
+        ),
+        tags_to_remove AS (
+            SELECT et.id, et.name
+            FROM existing_tags et
+            LEFT JOIN new_tags nt ON et.name = nt.name
+            WHERE nt.id IS NULL
+        ),
+        deleted_article_tags AS (
+            DELETE FROM article_tags
+            WHERE article_id = $4 AND tag_id IN (SELECT id FROM tags_to_remove)
+        ),
+        inserted_article_tags AS (
+            INSERT INTO article_tags (article_id, tag_id)
+            SELECT $4, id FROM tags_to_add
+            ON CONFLICT DO NOTHING
+        ),
+        deleted_orphaned_tags AS (
+            DELETE FROM tags
+            WHERE id IN (SELECT id FROM tags_to_remove)
+              AND NOT EXISTS (
+                  SELECT 1 FROM article_tags WHERE tag_id = tags.id AND article_id != $4
+              )
+        )
+        SELECT 1;
+        "#,
+    )
+    .bind::<Text, _>(title)
+    .bind::<Text, _>(content)
+    .bind::<Integer, _>(author_id)
+    .bind::<Integer, _>(article_id)
+    .bind::<Array<Text>, _>(tag_names)
+    .execute(conn)?;
 
-        for tag_name in tag_names {
-            let tag_id = tags::table
-                .select(tags::id)
-                .filter(tags::name.eq(tag_name))
-                .first::<i32>(conn)?;
-
-            diesel::insert_into(article_tags::table)
-                .values((
-                    article_tags::article_id.eq(article_id),
-                    article_tags::tag_id.eq(tag_id),
-                ))
-                .execute(conn)?;
-        }
-
-        Ok(())
-    })
+    Ok(())
 }
 
 pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Result<()> {
@@ -125,33 +161,33 @@ pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Resu
         .get()
         .context("[news-api] failed retrieve db connection")?;
 
-    let query = format!(
+    sql_query(
         r#"
-        DO $$
-        DECLARE
-            target_article_id INTEGER := {};
-            target_author_id INTEGER := {};
-        BEGIN
-            CREATE TEMP TABLE tags_ids_to_delete AS
-            SELECT tag_id FROM article_tags
-            WHERE article_tags.article_id = target_article_id;
-
+        WITH deleted_article AS (
             DELETE FROM articles
-            WHERE articles.id = target_article_id AND articles.author_id = target_author_id;
-
-            DELETE FROM tags
-            WHERE tags.id IN (SELECT tag_id FROM tags_ids_to_delete)
-              AND NOT EXISTS (
-                SELECT 1 FROM article_tags WHERE article_tags.tag_id = tags.id
-            );
-
-            DROP TABLE tags_ids_to_delete;
-        END $$;
+            WHERE articles.id = $1 AND articles.author_id = $2
+            RETURNING id
+        ),
+        tags_to_delete AS (
+            DELETE FROM article_tags
+            WHERE article_id = $1
+            RETURNING tag_id
+        ),
+        deleted_tags AS (
+             DELETE FROM tags
+             WHERE tags.id IN (SELECT tag_id FROM tags_to_delete)
+                 AND NOT EXISTS (
+                     SELECT 1 FROM article_tags
+                     WHERE article_tags.tag_id = tags.id AND article_tags.article_id != $1
+                 )
+             RETURNING id
+        )
+        SELECT 1;
         "#,
-        article_id, author_id
-    );
-
-    sql_query(query).execute(conn)?;
+    )
+    .bind::<Integer, _>(article_id)
+    .bind::<Integer, _>(author_id)
+    .execute(conn)?;
 
     Ok(())
 }

@@ -28,8 +28,8 @@ CREATE TABLE tags (
 CREATE INDEX idx_tags_name ON tags (name);
 
 CREATE TABLE article_tags (
-    article_id INTEGER NOT NULL REFERENCES articles(id) ON DELETE CASCADE,
-    tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+    article_id INTEGER NOT NULL REFERENCES articles(id),
+    tag_id INTEGER NOT NULL REFERENCES tags(id),
     PRIMARY KEY (article_id, tag_id)
 );
 
