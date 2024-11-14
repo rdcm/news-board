@@ -1,5 +1,5 @@
 use crate::services::DbPool;
-use anyhow::{Context, Result};
+use anyhow::{Result};
 use db_schema::models::{ArticleEntry, ArticleId};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Array, Int8, Integer, Text, Timestamp};
@@ -12,9 +12,7 @@ pub fn create_article(
     content: &str,
     tag_names: Vec<String>,
 ) -> Result<ArticleId> {
-    let conn = &mut db_pool
-        .get()
-        .context("[news-api] failed to retrieve db connection")?;
+    let conn = &mut db_pool.get_connection()?;
 
     let article_id = sql_query(
         r#"
@@ -53,9 +51,7 @@ pub fn get_articles_page(
     last_timestamp: Option<NaiveDateTime>,
     page_size: i64,
 ) -> Result<Vec<ArticleEntry>> {
-    let conn = &mut db_pool
-        .get()
-        .context("[news-api] failed retrieve db connection")?;
+    let conn = &mut db_pool.get_connection()?;
 
     let timestamp = last_timestamp.unwrap_or_else(|| Utc::now().naive_utc());
     let articles = sql_query(
@@ -91,9 +87,7 @@ pub fn update_article(
     content: &str,
     tag_names: Vec<String>,
 ) -> Result<()> {
-    let conn = &mut db_pool
-        .get()
-        .context("[news-api] failed retrieve db connection")?;
+    let conn = &mut db_pool.get_connection()?;
 
     sql_query(
         r#"
@@ -157,9 +151,7 @@ pub fn update_article(
 }
 
 pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Result<()> {
-    let conn = &mut db_pool
-        .get()
-        .context("[news-api] failed retrieve db connection")?;
+    let conn = &mut db_pool.get_connection()?;
 
     sql_query(
         r#"
@@ -193,9 +185,7 @@ pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Resu
 }
 
 pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
-    let conn = &mut db_pool
-        .get()
-        .context("[news-api] failed retrieve db connection")?;
+    let conn = &mut db_pool.get_connection()?;
 
     let article = sql_query(
         r#"
