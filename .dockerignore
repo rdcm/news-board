@@ -1,0 +1,9 @@
+.git
+.gitignore
+.idea
+.env
+
+target
+helm
+docker-compose.yml
+Makefile

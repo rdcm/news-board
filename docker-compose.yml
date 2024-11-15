@@ -15,6 +15,27 @@ services:
     networks:
       - news_board
 
+  news-api:
+    build:
+      context: .
+      dockerfile: news-api/Dockerfile
+    hostname: news-api
+    container_name: news-api
+    image: news-api:latest
+    depends_on:
+      - postgres
+    ports:
+      - "50051:50051"
+    environment:
+      # postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
+      - NEWS_API__DATABASE__URI=postgresql://postgres:postgres@postgres:5432/postgres
+      - NEWS_API__APP__HOST=0.0.0.0
+      - NEWS_API__APP__PORT=50051
+      - RUST_BACKTRACE=1
+      - RUST_LOG=debug
+    networks:
+      - news_board
+
 networks:
   news_board:
     driver: bridge
