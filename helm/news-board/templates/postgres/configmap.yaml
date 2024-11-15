@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-scripts
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  {{- $files := .Files.Glob "sql/*.sql" }}
+  {{- range $path, $file := $files }}
+  {{ $path | base }}: |
+    {{- "\n" }}{{- printf "%s" $file | indent 4 }}
+  {{- end }}

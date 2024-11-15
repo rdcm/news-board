@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.api.name }}-service
+spec:
+  selector:
+    app: {{ .Values.api.name }}
+  ports:
+    - protocol: TCP
+      port: {{ .Values.api.externalPort }}
+      targetPort: {{ .Values.api.internalPort }}
+      name: app
+{{/*    - protocol: TCP*/}}
+{{/*      port: {{ .Values.api.metrics.port }}*/}}
+{{/*      targetPort: {{ .Values.api.metrics.port }}*/}}
+{{/*      name: metrics*/}}
+  type: ClusterIP

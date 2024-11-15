@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: {{ .Values.api.name }}-config
+  labels:
+    app: {{ .Values.api.name }}
+data:
+  NEWS_API__DATABASE__URI: "{{ .Values.api.db.uri }}"
+  NEWS_API__APP__HOST: "{{ .Values.api.host }}"
+  NEWS_API__APP__PORT: "{{ .Values.api.internalPort }}"
+  RUST_LOG: "{{ .Values.api.logLevel }}"

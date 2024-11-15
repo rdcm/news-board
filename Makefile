@@ -19,3 +19,12 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+deploy-news-board-dev:
+	helm upgrade --install --atomic --timeout 300s --wait news-board helm/news-board -f ./helm/news-board/values/dev.yaml --create-namespace --namespace news-board
+
+delete-news-board:
+	helm delete news-board --namespace news-board
+
+render-news-board-dev:
+	helm template -f ./helm/news-board/values/dev.yaml helm/news-board > template-render-dev.yaml --debug
