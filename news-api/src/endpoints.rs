@@ -4,12 +4,12 @@ use crate::infrastructure::{
 use crate::mappers::into_model;
 use crate::news::news_service_server::NewsService;
 use crate::news::*;
-use crate::services::Services;
+use crate::app_state::AppState;
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use tonic::{Code, Request, Response, Status};
 
 #[tonic::async_trait]
-impl NewsService for Services {
+impl NewsService for AppState {
     async fn get_article(
         &self,
         request: Request<GetArticleRequest>,

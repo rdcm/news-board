@@ -1,4 +1,4 @@
-use crate::services::DbPool;
+use crate::app_state::DbPool;
 use anyhow::Result;
 use db_schema::models::{ArticleEntry, ArticleId};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};

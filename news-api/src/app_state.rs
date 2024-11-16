@@ -27,11 +27,11 @@ impl DbPool {
     }
 }
 
-pub struct Services {
+pub struct AppState {
     pub db_pool: DbPool,
 }
 
-impl Services {
+impl AppState {
     pub fn new(settings: &Settings) -> Result<Self> {
         let db_pool = DbPool::new(&settings.database.uri)?;
 

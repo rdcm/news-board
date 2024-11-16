@@ -10,8 +10,8 @@ pub mod infrastructure;
 pub mod mappers;
 #[path = "auth/reflection_middleware.rs"]
 pub mod reflection_middleware;
-#[path = "services.rs"]
-pub mod services;
+#[path = "app_state.rs"]
+pub mod app_state;
 #[path = "settings.rs"]
 pub mod settings;
 #[path = "../../target/generated"]
