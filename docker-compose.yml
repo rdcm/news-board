@@ -5,9 +5,9 @@ services:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres-user
+      POSTGRES_PASSWORD: postgres-pass
+      POSTGRES_DB: news-api
     volumes:
       - ./helm/news-board/sql:/docker-entrypoint-initdb.d:ro
     ports:
@@ -28,7 +28,7 @@ services:
       - "50051:50051"
     environment:
       # postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
-      - NEWS_API__DATABASE__URI=postgresql://postgres:postgres@postgres:5432/postgres
+      - NEWS_API__DATABASE__URI=postgresql://postgres-user:postgres-pass@postgres:5432/news-api
       - NEWS_API__APP__HOST=0.0.0.0
       - NEWS_API__APP__PORT=50051
       - NEWS_API__AUTH__VALID_TOKEN=foo
