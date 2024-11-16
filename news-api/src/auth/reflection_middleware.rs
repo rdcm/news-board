@@ -1,4 +1,4 @@
-use crate::consts::REQUEST_PATH;
+use crate::consts::REQUEST_PATH_HEADER;
 use std::task::{Context, Poll};
 use tonic::codegen::http::HeaderValue;
 use tonic::codegen::{http, Service};
@@ -37,7 +37,7 @@ where
     fn call(&mut self, mut req: http::Request<ReqBody>) -> Self::Future {
         let path = req.uri().path().to_owned();
         req.headers_mut()
-            .insert(REQUEST_PATH, HeaderValue::from_str(&path).unwrap());
+            .insert(REQUEST_PATH_HEADER, HeaderValue::from_str(&path).unwrap());
 
         self.inner.call(req)
     }

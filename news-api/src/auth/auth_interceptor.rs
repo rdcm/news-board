@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use crate::consts::{AUTHORIZE_HEADER, REQUEST_PATH};
+use crate::consts::{AUTHORIZE_HEADER, REQUEST_PATH_HEADER};
 use tonic::metadata::{Ascii, MetadataValue};
 use tonic::service::Interceptor;
 use tonic::{Request, Status};
@@ -32,7 +32,7 @@ impl Interceptor for AuthInterceptor {
         let metadata = request.metadata();
 
         let request_path = metadata
-            .get(REQUEST_PATH)
+            .get(REQUEST_PATH_HEADER)
             .and_then(|value| value.to_str().ok())
             .ok_or_else(|| Status::unauthenticated("No RPC metadata or invalid path format"))?;
 
