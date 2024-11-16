@@ -1,10 +1,10 @@
 use anyhow::Context;
 use config::{Config, Environment};
 use dotenvy::dotenv;
+use news_api::app_state::AppState;
 use news_api::auth_interceptor::AuthInterceptor;
 use news_api::news::news_service_server::NewsServiceServer;
 use news_api::reflection_middleware::ReflectionMiddlewareLayer;
-use news_api::app_state::AppState;
 use news_api::settings::Settings;
 use tonic::transport::Server;
 

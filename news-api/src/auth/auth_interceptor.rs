@@ -1,14 +1,14 @@
-use std::collections::HashSet;
 use crate::consts::{AUTHORIZE_HEADER, REQUEST_PATH_HEADER};
+use crate::settings::Settings;
+use std::collections::HashSet;
 use tonic::metadata::{Ascii, MetadataValue};
 use tonic::service::Interceptor;
 use tonic::{Request, Status};
-use crate::settings::Settings;
 
 #[derive(Clone)]
 pub struct AuthInterceptor {
     valid_token: String,
-    secure_routes: HashSet<String>
+    secure_routes: HashSet<String>,
 }
 
 impl AuthInterceptor {

@@ -1,0 +1,11 @@
+# https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#fn_call_width
+fn_call_width = 50
+
+# https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#fn_params_layout
+fn_params_layout = "Tall"
+
+# https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#struct_lit_width
+struct_lit_width = 18
+
+# https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#max_width
+max_width = 100

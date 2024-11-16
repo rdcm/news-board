@@ -1,11 +1,11 @@
+use crate::app_state::AppState;
 use crate::infrastructure::{
     create_article, delete_article, get_article, get_articles_page, update_article,
 };
 use crate::mappers::into_model;
 use crate::news::news_service_server::NewsService;
 use crate::news::*;
-use crate::app_state::AppState;
-use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
+use crate::utils::parse_timestamp;
 use tonic::{Code, Request, Response, Status};
 
 #[tonic::async_trait]
@@ -29,9 +29,7 @@ impl NewsService for AppState {
         request: Request<GetArticlesRequest>,
     ) -> Result<Response<GetArticlesResponse>, Status> {
         let req = request.into_inner();
-        let timestamp =
-            NaiveDateTime::parse_from_str(req.last_timestamp.as_str(), "%Y-%m-%d %H:%M:%S%.6f")
-                .ok();
+        let timestamp = parse_timestamp(&req.last_timestamp);
 
         match get_articles_page(&self.db_pool, timestamp, req.page_size) {
             Ok(articles) => Ok(Response::new(GetArticlesResponse {

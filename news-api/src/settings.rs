@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 use anyhow::{Context, Result};
 use serde::Deserialize;
+use std::collections::HashSet;
 use std::net::SocketAddr;
 
 #[derive(Debug, Deserialize)]
@@ -13,7 +13,7 @@ pub struct Settings {
 #[derive(Debug, Deserialize)]
 pub struct AuthSettings {
     pub valid_token: String,
-    pub secure_routes: String
+    pub secure_routes: String,
 }
 
 #[derive(Debug, Deserialize)]

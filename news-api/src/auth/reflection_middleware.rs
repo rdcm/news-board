@@ -36,8 +36,10 @@ where
 
     fn call(&mut self, mut req: http::Request<ReqBody>) -> Self::Future {
         let path = req.uri().path().to_owned();
-        req.headers_mut()
-            .insert(REQUEST_PATH_HEADER, HeaderValue::from_str(&path).unwrap());
+        req.headers_mut().insert(
+            REQUEST_PATH_HEADER,
+            HeaderValue::from_str(&path).unwrap(),
+        );
 
         self.inner.call(req)
     }
