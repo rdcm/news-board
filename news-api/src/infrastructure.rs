@@ -1,5 +1,5 @@
 use crate::services::DbPool;
-use anyhow::{Result};
+use anyhow::Result;
 use db_schema::models::{ArticleEntry, ArticleId};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Array, Int8, Integer, Text, Timestamp};

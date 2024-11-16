@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::net::SocketAddr;
@@ -6,6 +7,13 @@ use std::net::SocketAddr;
 pub struct Settings {
     pub database: DbSettings,
     pub app: AppSettings,
+    pub auth: AuthSettings,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct AuthSettings {
+    pub valid_token: String,
+    pub secure_routes: String
 }
 
 #[derive(Debug, Deserialize)]
@@ -17,6 +25,15 @@ pub struct DbSettings {
 pub struct AppSettings {
     pub host: String,
     pub port: i32,
+}
+
+impl AuthSettings {
+    pub fn get_secure_routes(&self) -> HashSet<String> {
+        self.secure_routes
+            .split(',')
+            .map(|s| s.to_string())
+            .collect()
+    }
 }
 
 impl AppSettings {

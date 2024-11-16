@@ -15,4 +15,5 @@ tokio = { version = "1", features = ["full"] }
 diesel = { version =  "2.2.4", features = ["postgres", "chrono", "r2d2"] }
 dotenvy = "0.15.7"
 tonic-build = "0.12.3"
+tower = "0.5.1"
 serde = { version = "1.0.214", features = ["derive"] }

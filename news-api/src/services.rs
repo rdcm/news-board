@@ -1,7 +1,7 @@
+use crate::settings::Settings;
 use anyhow::{Context, Result};
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::PgConnection;
-use crate::settings::Settings;
 
 pub struct DbPool {
     db_pool: Pool<ConnectionManager<PgConnection>>,
@@ -18,7 +18,8 @@ impl DbPool {
     }
 
     pub fn get_connection(&self) -> Result<PooledConnection<ConnectionManager<PgConnection>>> {
-        let conn = self.db_pool
+        let conn = self
+            .db_pool
             .get()
             .context("[news-api] failed to retrieve db connection")?;
 
