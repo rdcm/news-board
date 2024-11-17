@@ -1,4 +1,4 @@
-use crate::news::Article;
+use crate::news_generated::Article;
 use db_schema::models::ArticleEntry;
 
 pub fn into_model(article_entry: ArticleEntry) -> Article {

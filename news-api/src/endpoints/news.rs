@@ -3,8 +3,8 @@ use crate::infrastructure::{
     create_article, delete_article, get_article, get_articles_page, update_article,
 };
 use crate::mappers::into_model;
-use crate::news::news_service_server::NewsService;
-use crate::news::*;
+use crate::news_generated::news_service_server::NewsService;
+use crate::news_generated::*;
 use crate::utils::parse_timestamp;
 use tonic::{Code, Request, Response, Status};
 

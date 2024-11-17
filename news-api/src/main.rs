@@ -2,10 +2,12 @@ use anyhow::Context;
 use config::{Config, Environment};
 use dotenvy::dotenv;
 use news_api::app_state::AppState;
+use news_api::auth_generated::auth_service_server::AuthServiceServer;
 use news_api::auth_interceptor::AuthInterceptor;
-use news_api::news::news_service_server::NewsServiceServer;
+use news_api::news_generated::news_service_server::NewsServiceServer;
 use news_api::reflection_middleware::ReflectionMiddlewareLayer;
 use news_api::settings::Settings;
+use tonic::codegen::InterceptedService;
 use tonic::transport::Server;
 
 #[tokio::main]
@@ -23,13 +25,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app_state = AppState::new(&settings)?;
     let auth_interceptor = AuthInterceptor::new(&settings);
-    let server = NewsServiceServer::with_interceptor(app_state, auth_interceptor);
+    let reflection_layer = ReflectionMiddlewareLayer::default();
 
     let sock_addr = settings.app.get_sock_address()?;
 
     Server::builder()
-        .layer(ReflectionMiddlewareLayer::default())
-        .add_service(server)
+        .layer(reflection_layer)
+        .add_service(InterceptedService::new(
+            NewsServiceServer::new(app_state.clone()),
+            auth_interceptor.clone(),
+        ))
+        .add_service(InterceptedService::new(
+            AuthServiceServer::new(app_state.clone()),
+            auth_interceptor.clone(),
+        ))
         .serve(sock_addr)
         .await?;
 

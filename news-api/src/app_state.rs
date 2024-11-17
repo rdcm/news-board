@@ -2,6 +2,7 @@ use crate::settings::Settings;
 use anyhow::{Context, Result};
 use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 use diesel::PgConnection;
+use std::sync::Arc;
 
 pub struct DbPool {
     db_pool: Pool<ConnectionManager<PgConnection>>,
@@ -27,14 +28,18 @@ impl DbPool {
     }
 }
 
+#[derive(Clone)]
 pub struct AppState {
-    pub db_pool: DbPool,
+    pub db_pool: Arc<DbPool>,
 }
 
 impl AppState {
     pub fn new(settings: &Settings) -> Result<Self> {
         let db_pool = DbPool::new(&settings.database.uri)?;
+        let db_pool_arc = Arc::new(db_pool);
 
-        Ok(Self { db_pool })
+        Ok(Self {
+            db_pool: db_pool_arc,
+        })
     }
 }
