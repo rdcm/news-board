@@ -24,3 +24,9 @@ pub struct ArticleId {
     #[diesel(sql_type = Integer)]
     pub id: i32,
 }
+
+#[derive(QueryableByName)]
+pub struct UserIdEntry {
+    #[diesel(sql_type = Integer)]
+    pub id: i32,
+}

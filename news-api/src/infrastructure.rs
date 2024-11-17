@@ -1,6 +1,6 @@
 use crate::app_state::DbPool;
 use anyhow::Result;
-use db_schema::models::{ArticleEntry, ArticleId};
+use db_schema::models::{ArticleEntry, ArticleId, UserIdEntry};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Array, Int8, Integer, Text, Timestamp};
 use diesel::{sql_query, RunQueryDsl};
@@ -208,4 +208,39 @@ pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
     .get_result::<ArticleEntry>(conn)?;
 
     Ok(article)
+}
+
+pub fn create_user(db_pool: &DbPool, username: &str, hashed_password: &str) -> Result<UserIdEntry> {
+    let conn = &mut db_pool.get_connection()?;
+
+    let user_id = sql_query(
+        r#"
+        INSERT INTO users (username, email, password_hash)
+        VALUES ($1, NULL, $2)
+        ON CONFLICT (username) DO NOTHING
+        RETURNING id;
+    "#,
+    )
+    .bind::<Text, _>(username)
+    .bind::<Text, _>(hashed_password)
+    .get_result::<UserIdEntry>(conn)?;
+
+    Ok(user_id)
+}
+
+pub fn save_session_id(db_pool: &DbPool, user_id: i32, session_id: &str) -> Result<()> {
+    let conn = &mut db_pool.get_connection()?;
+
+    sql_query(
+        r#"
+        INSERT INTO sessions (session_id, user_id, created_at)
+        VALUES ($1, $2, NOW())
+        RETURNING id;
+    "#,
+    )
+    .bind::<Text, _>(session_id)
+    .bind::<Integer, _>(user_id)
+    .execute(conn)?;
+
+    Ok(())
 }

@@ -14,6 +14,8 @@ pub struct Settings {
 pub struct AuthSettings {
     pub valid_token: String,
     pub secure_routes: String,
+    pub pass_pepper: String,
+    pub secret_key: String,
 }
 
 #[derive(Debug, Deserialize)]

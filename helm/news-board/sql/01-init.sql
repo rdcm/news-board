@@ -1,11 +1,22 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE
 );
 
 CREATE INDEX CONCURRENTLY idx_users_username ON users (username);
 CREATE INDEX CONCURRENTLY idx_users_email ON users (email);
+
+CREATE TABLE sessions (
+    id SERIAL PRIMARY KEY,
+    session_id VARCHAR(255) UNIQUE NOT NULL,
+    user_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX CONCURRENTLY idx_sessions_session_id ON sessions (session_id);
+CREATE INDEX CONCURRENTLY idx_sessions_user_id ON sessions (user_id);
 
 CREATE TABLE articles (
     id SERIAL PRIMARY KEY,

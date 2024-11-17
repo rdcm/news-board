@@ -8,8 +8,13 @@ service AuthService {
   rpc SignOut(SignOutRequest) returns (SignOutResponse);
 }
 
-message SignUpRequest {}
-message SignUpResponse {}
+message SignUpRequest {
+  string username = 1;
+  string password = 2;
+}
+message SignUpResponse {
+  string session_id = 1;
+}
 
 message SignInRequest {}
 message SignInResponse {}
