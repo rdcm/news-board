@@ -1,10 +1,10 @@
 use crate::news_generated::Article;
 use db_schema::models::ArticleEntry;
 
-pub fn into_model(article_entry: ArticleEntry) -> Article {
+pub fn into_article(article_entry: ArticleEntry) -> Article {
     Article {
         id: article_entry.id,
-        author_id: article_entry.author_id,
+        author_username: article_entry.author_username,
         title: article_entry.title,
         content: article_entry.content,
         created_at: article_entry.created_at.to_string(),
@@ -12,6 +12,6 @@ pub fn into_model(article_entry: ArticleEntry) -> Article {
     }
 }
 
-pub fn into_models(article_entry: Vec<ArticleEntry>) -> Vec<Article> {
-    article_entry.into_iter().map(into_model).collect()
+pub fn into_articles(article_entry: Vec<ArticleEntry>) -> Vec<Article> {
+    article_entry.into_iter().map(into_article).collect()
 }

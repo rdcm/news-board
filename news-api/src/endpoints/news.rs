@@ -2,7 +2,7 @@ use crate::app_state::AppState;
 use crate::infrastructure::{
     create_article, delete_article, get_article, get_articles_page, update_article,
 };
-use crate::mappers::{into_model, into_models};
+use crate::mappers::{into_article, into_articles};
 use crate::news_generated::news_service_server::NewsService;
 use crate::news_generated::*;
 use crate::utils::{get_user_id, parse_timestamp};
@@ -20,7 +20,7 @@ impl NewsService for AppState {
             .map_err(|_| Status::failed_precondition("Article not found"))?;
 
         Ok(Response::new(GetArticleResponse {
-            article: Some(into_model(article)),
+            article: Some(into_article(article)),
         }))
     }
 
@@ -35,7 +35,7 @@ impl NewsService for AppState {
             .map_err(|_| Status::failed_precondition("Getting page error"))?;
 
         Ok(Response::new(GetArticlesResponse {
-            articles: into_models(article_page),
+            articles: into_articles(article_page),
         }))
     }
 

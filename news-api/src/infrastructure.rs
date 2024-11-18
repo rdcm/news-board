@@ -62,12 +62,14 @@ pub fn get_articles_page(
             articles.title,
             articles.content,
             articles.created_at,
-            array_agg(tags.name) AS tags
+            array_agg(tags.name) AS tags,
+            users.username AS author_username
         FROM articles
             LEFT JOIN article_tags ON articles.id = article_tags.article_id
             LEFT JOIN tags ON tags.id = article_tags.tag_id
+            LEFT JOIN users ON users.id = articles.author_id
         WHERE articles.created_at < $1
-        GROUP BY articles.id, articles.created_at
+        GROUP BY articles.id, articles.created_at, users.username
         ORDER BY articles.created_at DESC
         LIMIT $2
     "#,
@@ -195,12 +197,14 @@ pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
             articles.title,
             articles.content,
             articles.created_at,
-            array_agg(tags.name) AS tags
+            array_agg(tags.name) AS tags,
+            users.username AS author_username
         FROM articles
             LEFT JOIN article_tags ON articles.id = article_tags.article_id
             LEFT JOIN tags ON tags.id = article_tags.tag_id
+            LEFT JOIN users ON users.id = articles.author_id
         WHERE articles.id = $1
-        GROUP BY articles.id
+        GROUP BY articles.id, users.username
         LIMIT 1
     "#,
     )
