@@ -1,34 +1,22 @@
+use crate::app_state::AppState;
 use crate::consts::{AUTHORIZE_HEADER, REQUEST_PATH_HEADER};
-use crate::settings::Settings;
-use std::collections::HashSet;
-use tonic::metadata::{Ascii, MetadataValue};
+use crate::infrastructure::get_session_by_id;
 use tonic::service::Interceptor;
 use tonic::{Request, Status};
 
 #[derive(Clone)]
 pub struct AuthInterceptor {
-    valid_token: String,
-    secure_routes: HashSet<String>,
+    app_state: AppState,
 }
 
 impl AuthInterceptor {
-    pub fn new(settings: &Settings) -> Self {
-        Self {
-            valid_token: settings.auth.valid_token.clone(),
-            secure_routes: settings.auth.get_secure_routes(),
-        }
-    }
-
-    fn token_is_valid(&self, token: Option<&MetadataValue<Ascii>>) -> bool {
-        token
-            .and_then(|t| t.to_str().ok())
-            .map(|t| t == self.valid_token)
-            .unwrap_or(false)
+    pub fn new(app_state: AppState) -> Self {
+        Self { app_state }
     }
 }
 
 impl Interceptor for AuthInterceptor {
-    fn call(&mut self, request: Request<()>) -> Result<Request<()>, Status> {
+    fn call(&mut self, mut request: Request<()>) -> Result<Request<()>, Status> {
         let metadata = request.metadata();
 
         let request_path = metadata
@@ -36,10 +24,24 @@ impl Interceptor for AuthInterceptor {
             .and_then(|value| value.to_str().ok())
             .ok_or_else(|| Status::unauthenticated("No RPC metadata or invalid path format"))?;
 
-        if self.secure_routes.contains(request_path)
-            && !self.token_is_valid(metadata.get(AUTHORIZE_HEADER))
+        if self
+            .app_state
+            .settings
+            .auth
+            .secure_routes
+            .contains(request_path)
         {
-            return Err(Status::unauthenticated("Invalid token"));
+            let session_id = metadata
+                .get(AUTHORIZE_HEADER)
+                .ok_or(Status::unauthenticated("Invalid token"))?
+                .to_str()
+                .map_err(|_| Status::unauthenticated("Invalid token"))?;
+
+            let user_id = get_session_by_id(&self.app_state.db_pool, session_id)
+                .map_err(|_| Status::unauthenticated("No such session"))?;
+
+            let extensions = request.extensions_mut();
+            extensions.insert(user_id);
         }
 
         Ok(request)

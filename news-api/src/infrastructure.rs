@@ -1,5 +1,5 @@
 use crate::app_state::DbPool;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use db_schema::models::{ArticleEntry, ArticleId, UserEntry, UserIdEntry};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Array, Int8, Integer, Text, Timestamp};
@@ -259,4 +259,15 @@ pub fn get_user_by_username(db_pool: &DbPool, username: &str) -> Result<UserEntr
         .get_result::<UserEntry>(conn)?;
 
     Ok(user)
+}
+
+pub fn get_session_by_id(db_pool: &DbPool, session_id: &str) -> Result<UserIdEntry> {
+    let conn = &mut db_pool.get_connection()?;
+
+    let user_id = sql_query(r#"SELECT user_id AS id FROM sessions WHERE session_id = $1;"#)
+        .bind::<Text, _>(session_id)
+        .get_result::<UserIdEntry>(conn)
+        .map_err(|_| anyhow!("session not found"))?;
+
+    Ok(user_id)
 }

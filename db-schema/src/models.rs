@@ -40,7 +40,7 @@ pub struct UserEntry {
     pub salt: String,
 }
 
-#[derive(QueryableByName)]
+#[derive(QueryableByName, Clone)]
 pub struct UserIdEntry {
     #[diesel(sql_type = Integer)]
     pub id: i32,

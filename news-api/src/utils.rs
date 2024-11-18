@@ -1,9 +1,11 @@
 use anyhow::{anyhow, Context, Result};
 use bcrypt::{hash, verify, DEFAULT_COST};
+use db_schema::models::UserIdEntry;
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use hmac::{Hmac, Mac};
 use rand::random;
 use sha2::Sha256;
+use tonic::{Request, Status};
 use uuid::Uuid;
 
 type HmacSha256 = Hmac<Sha256>;
@@ -54,4 +56,14 @@ pub fn verify_password(
         true => Ok(()),
         false => Err(anyhow!("[news-api] invalid password")),
     }
+}
+
+pub fn get_user_id<T>(request: &Request<T>) -> Result<i32, Status> {
+    let user_id_entry = request
+        .extensions()
+        .get::<UserIdEntry>()
+        .cloned()
+        .ok_or_else(|| Status::internal("User ID missing from context"))?;
+
+    Ok(user_id_entry.id)
 }

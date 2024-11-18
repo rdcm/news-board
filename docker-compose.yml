@@ -31,7 +31,6 @@ services:
       - NEWS_API__DATABASE__URI=postgresql://postgres-user:postgres-pass@postgres:5432/news-api
       - NEWS_API__APP__HOST=0.0.0.0
       - NEWS_API__APP__PORT=50051
-      - NEWS_API__AUTH__VALID_TOKEN=foo
       - NEWS_API__AUTH__SECURE_ROUTES=/news.NewsService/CreateArticle,/news.NewsService/DeleteArticle,/news.NewsService/UpdateArticle
       - RUST_BACKTRACE=1
       - RUST_LOG=debug

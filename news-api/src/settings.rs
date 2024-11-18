@@ -3,27 +3,26 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::net::SocketAddr;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     pub database: DbSettings,
     pub app: AppSettings,
     pub auth: AuthSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct AuthSettings {
-    pub valid_token: String,
     pub secure_routes: String,
     pub pass_pepper: String,
     pub secret_key: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct DbSettings {
     pub uri: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct AppSettings {
     pub host: String,
     pub port: i32,

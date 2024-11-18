@@ -11,3 +11,7 @@ pub fn into_model(article_entry: ArticleEntry) -> Article {
         tags: article_entry.tags,
     }
 }
+
+pub fn into_models(article_entry: Vec<ArticleEntry>) -> Vec<Article> {
+    article_entry.into_iter().map(into_model).collect()
+}

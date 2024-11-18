@@ -7,6 +7,7 @@ use news_api::auth_interceptor::AuthInterceptor;
 use news_api::news_generated::news_service_server::NewsServiceServer;
 use news_api::reflection_middleware::ReflectionMiddlewareLayer;
 use news_api::settings::Settings;
+use std::sync::Arc;
 use tonic::codegen::InterceptedService;
 use tonic::transport::Server;
 
@@ -23,8 +24,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .try_deserialize()
         .context("[news-api] [config] Failed to deserialize config")?;
 
-    let app_state = AppState::new(&settings)?;
-    let auth_interceptor = AuthInterceptor::new(&settings);
+    let app_state = AppState::new(Arc::new(settings.clone()))?;
+    let auth_interceptor = AuthInterceptor::new(app_state.clone());
     let reflection_layer = ReflectionMiddlewareLayer::default();
 
     let sock_addr = settings.app.get_sock_address()?;
