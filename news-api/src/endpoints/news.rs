@@ -48,7 +48,7 @@ impl NewsService for AppState {
 
         let article_id = create_article(
             &self.db_pool,
-            user_id,
+            user_id.value,
             req.title.as_str(),
             req.content.as_str(),
             req.tags,
@@ -67,7 +67,7 @@ impl NewsService for AppState {
         let user_id = get_user_id(&request)?;
         let req = request.into_inner();
 
-        delete_article(&self.db_pool, user_id, req.article_id)
+        delete_article(&self.db_pool, user_id.value, req.article_id)
             .map_err(|_| Status::failed_precondition("Deleting article failed"))?;
 
         Ok(Response::new(DeleteArticleResponse {}))
@@ -82,7 +82,7 @@ impl NewsService for AppState {
 
         update_article(
             &self.db_pool,
-            user_id,
+            user_id.value,
             req.article_id,
             &req.title,
             &req.content,

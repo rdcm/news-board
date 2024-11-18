@@ -9,4 +9,7 @@ data:
   NEWS_API__DATABASE__URI: "{{ .Values.api.db.uri }}"
   NEWS_API__APP__HOST: "{{ .Values.api.host }}"
   NEWS_API__APP__PORT: "{{ .Values.api.internalPort }}"
+  NEWS_API__AUTH__PASS_PEPPER: "{{ .Values.api.auth.passPepper }}"
+  NEWS_API__AUTH__SECRET_KEY: "{{ .Values.api.auth.secretKey }}"
+  NEWS_API__AUTH__SECURE_ROUTES: "{{ .Values.api.auth.secureRoutes }}"
   RUST_LOG: "{{ .Values.api.logLevel }}"

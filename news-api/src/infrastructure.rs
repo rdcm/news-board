@@ -275,3 +275,14 @@ pub fn get_session_by_id(db_pool: &DbPool, session_id: &str) -> Result<UserIdEnt
 
     Ok(user_id)
 }
+
+pub fn delete_session(db_pool: &DbPool, session_id: &str) -> Result<()> {
+    let conn = &mut db_pool.get_connection()?;
+
+    sql_query(r#"DELETE FROM sessions WHERE session_id = $1;"#)
+        .bind::<Text, _>(session_id)
+        .execute(conn)
+        .map_err(|_| anyhow!("Delete session may failed"))?;
+
+    Ok(())
+}

@@ -31,8 +31,11 @@ api:
   externalPort: 50051
   internalPort: 50051
   logLevel: info
+  auth:
+    passPepper: super_secret_pass_pepper
+    secretKey: super_secret_sid_key
+    secureRoutes: /news.NewsService/CreateArticle,/news.NewsService/DeleteArticle,/news.NewsService/UpdateArticle,/auth.AuthService/SignOut
   db:
-    # postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
     uri: postgresql://postgres-user:postgres-pass@postgres-service:5432/news-api
   image:
     name: news-api

@@ -1,6 +1,6 @@
+use crate::consts::{SessionId, UserId};
 use anyhow::{anyhow, Context, Result};
 use bcrypt::{hash, verify, DEFAULT_COST};
-use db_schema::models::UserIdEntry;
 use diesel::internal::derives::multiconnection::chrono::NaiveDateTime;
 use hmac::{Hmac, Mac};
 use rand::random;
@@ -58,12 +58,22 @@ pub fn verify_password(
     }
 }
 
-pub fn get_user_id<T>(request: &Request<T>) -> Result<i32, Status> {
-    let user_id_entry = request
+pub fn get_user_id<T>(request: &Request<T>) -> Result<UserId, Status> {
+    let user_id = request
         .extensions()
-        .get::<UserIdEntry>()
+        .get::<UserId>()
         .cloned()
         .ok_or_else(|| Status::internal("User ID missing from context"))?;
 
-    Ok(user_id_entry.id)
+    Ok(user_id)
+}
+
+pub fn get_session_id<T>(request: &Request<T>) -> Result<SessionId, Status> {
+    let session_id = request
+        .extensions()
+        .get::<SessionId>()
+        .cloned()
+        .ok_or_else(|| Status::internal("User ID missing from context"))?;
+
+    Ok(session_id)
 }

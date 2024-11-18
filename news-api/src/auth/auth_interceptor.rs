@@ -1,5 +1,5 @@
 use crate::app_state::AppState;
-use crate::consts::{AUTHORIZE_HEADER, REQUEST_PATH_HEADER};
+use crate::consts::{SessionId, UserId, AUTHORIZE_HEADER, REQUEST_PATH_HEADER};
 use crate::infrastructure::get_session_by_id;
 use tonic::service::Interceptor;
 use tonic::{Request, Status};
@@ -40,8 +40,10 @@ impl Interceptor for AuthInterceptor {
             let user_id = get_session_by_id(&self.app_state.db_pool, session_id)
                 .map_err(|_| Status::unauthenticated("No such session"))?;
 
+            let sid_string = session_id.to_string();
             let extensions = request.extensions_mut();
-            extensions.insert(user_id);
+            extensions.insert(UserId { value: user_id.id });
+            extensions.insert(SessionId { value: sid_string });
         }
 
         Ok(request)

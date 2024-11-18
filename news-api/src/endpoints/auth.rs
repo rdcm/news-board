@@ -1,8 +1,8 @@
 use crate::app_state::AppState;
 use crate::auth_generated::auth_service_server::AuthService;
 use crate::auth_generated::*;
-use crate::infrastructure::{create_user, get_user_by_username, save_session_id};
-use crate::utils::{generate_password_hash, generate_session_id, verify_password};
+use crate::infrastructure::{create_user, delete_session, get_user_by_username, save_session_id};
+use crate::utils::{generate_password_hash, generate_session_id, get_session_id, verify_password};
 use tonic::{Request, Response, Status};
 
 #[tonic::async_trait]
@@ -65,8 +65,13 @@ impl AuthService for AppState {
 
     async fn sign_out(
         &self,
-        _request: Request<SignOutRequest>,
+        request: Request<SignOutRequest>,
     ) -> Result<Response<SignOutResponse>, Status> {
-        todo!()
+        let session_id = get_session_id(&request)?;
+
+        delete_session(&self.db_pool, &session_id.value)
+            .map_err(|_| Status::unauthenticated("SignOut failed"))?;
+
+        Ok(Response::new(SignOutResponse {}))
     }
 }
