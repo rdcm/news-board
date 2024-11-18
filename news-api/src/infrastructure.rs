@@ -1,6 +1,6 @@
 use crate::app_state::DbPool;
 use anyhow::Result;
-use db_schema::models::{ArticleEntry, ArticleId, UserIdEntry};
+use db_schema::models::{ArticleEntry, ArticleId, UserEntry, UserIdEntry};
 use diesel::internal::derives::multiconnection::chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Array, Int8, Integer, Text, Timestamp};
 use diesel::{sql_query, RunQueryDsl};
@@ -210,19 +210,25 @@ pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
     Ok(article)
 }
 
-pub fn create_user(db_pool: &DbPool, username: &str, hashed_password: &str) -> Result<UserIdEntry> {
+pub fn create_user(
+    db_pool: &DbPool,
+    username: &str,
+    hashed_password: &str,
+    salt: &str,
+) -> Result<UserIdEntry> {
     let conn = &mut db_pool.get_connection()?;
 
     let user_id = sql_query(
         r#"
-        INSERT INTO users (username, email, password_hash)
-        VALUES ($1, NULL, $2)
+        INSERT INTO users (username, email, password_hash, salt)
+        VALUES ($1, NULL, $2, $3)
         ON CONFLICT (username) DO NOTHING
         RETURNING id;
     "#,
     )
     .bind::<Text, _>(username)
     .bind::<Text, _>(hashed_password)
+    .bind::<Text, _>(salt)
     .get_result::<UserIdEntry>(conn)?;
 
     Ok(user_id)
@@ -243,4 +249,14 @@ pub fn save_session_id(db_pool: &DbPool, user_id: i32, session_id: &str) -> Resu
     .execute(conn)?;
 
     Ok(())
+}
+
+pub fn get_user_by_username(db_pool: &DbPool, username: &str) -> Result<UserEntry> {
+    let conn = &mut db_pool.get_connection()?;
+
+    let user = sql_query(r#"SELECT * FROM users WHERE username = $1;"#)
+        .bind::<Text, _>(username)
+        .get_result::<UserEntry>(conn)?;
+
+    Ok(user)
 }

@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::sql_types::{Array, Integer, Text, Timestamp};
+use diesel::sql_types::{Array, Integer, Nullable, Text, Timestamp};
 
 #[derive(Queryable, QueryableByName, Debug)]
 #[diesel(table_name = articles)]
@@ -23,6 +23,21 @@ pub struct ArticleEntry {
 pub struct ArticleId {
     #[diesel(sql_type = Integer)]
     pub id: i32,
+}
+
+#[derive(Queryable, QueryableByName, Debug)]
+#[diesel(table_name = users)]
+pub struct UserEntry {
+    #[diesel(sql_type = Integer)]
+    pub id: i32,
+    #[diesel(sql_type = Text)]
+    pub username: String,
+    #[diesel(sql_type = Nullable<Text>)]
+    pub email: Option<String>,
+    #[diesel(sql_type = Text)]
+    pub password_hash: String,
+    #[diesel(sql_type = Text)]
+    pub salt: String,
 }
 
 #[derive(QueryableByName)]

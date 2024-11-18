@@ -16,8 +16,13 @@ message SignUpResponse {
   string session_id = 1;
 }
 
-message SignInRequest {}
-message SignInResponse {}
+message SignInRequest {
+  string username = 1;
+  string password = 2;
+}
+message SignInResponse {
+  string session_id = 1;
+}
 
 message SignOutRequest {}
 message SignOutResponse {}

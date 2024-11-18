@@ -1,8 +1,9 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE
+    salt VARCHAR(32) NOT NULL
 );
 
 CREATE INDEX CONCURRENTLY idx_users_username ON users (username);
@@ -70,6 +71,3 @@ CREATE TABLE comments (
 CREATE INDEX CONCURRENTLY idx_comments_article_id ON comments (article_id);
 CREATE INDEX CONCURRENTLY idx_comments_parent_id ON comments (parent_id);
 CREATE INDEX CONCURRENTLY idx_comments_created_at ON comments (created_at);
-
--- bootstrap
-INSERT INTO users VALUES (1, 'rdcm', 'rdcm@protonmail.ch')
