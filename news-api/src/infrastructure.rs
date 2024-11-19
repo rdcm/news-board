@@ -29,7 +29,7 @@ pub fn create_article(
                  RETURNING id, name
          ),
          article_tag_associations AS (
-             INSERT INTO article_tags (article_id, tag_id)
+             INSERT INTO articles_tags (article_id, tag_id)
                  SELECT inserted_article.id, inserted_tags.id
                  FROM inserted_article, inserted_tags
          )
@@ -65,8 +65,8 @@ pub fn get_articles_page(
             array_agg(tags.name) AS tags,
             users.username AS author_username
         FROM articles
-            LEFT JOIN article_tags ON articles.id = article_tags.article_id
-            LEFT JOIN tags ON tags.id = article_tags.tag_id
+            LEFT JOIN articles_tags ON articles.id = articles_tags.article_id
+            LEFT JOIN tags ON tags.id = articles_tags.tag_id
             LEFT JOIN users ON users.id = articles.author_id
         WHERE articles.created_at < $1
         GROUP BY articles.id, articles.created_at, users.username
@@ -102,7 +102,7 @@ pub fn update_article(
         existing_tags AS (
             SELECT t.id, t.name
             FROM tags t
-            JOIN article_tags at ON t.id = at.tag_id
+            JOIN articles_tags at ON t.id = at.tag_id
             WHERE at.article_id = $4
         ),
         new_tags AS (
@@ -124,11 +124,11 @@ pub fn update_article(
             WHERE nt.id IS NULL
         ),
         deleted_article_tags AS (
-            DELETE FROM article_tags
+            DELETE FROM articles_tags
             WHERE article_id = $4 AND tag_id IN (SELECT id FROM tags_to_remove)
         ),
         inserted_article_tags AS (
-            INSERT INTO article_tags (article_id, tag_id)
+            INSERT INTO articles_tags (article_id, tag_id)
             SELECT $4, id FROM tags_to_add
             ON CONFLICT DO NOTHING
         ),
@@ -136,7 +136,7 @@ pub fn update_article(
             DELETE FROM tags
             WHERE id IN (SELECT id FROM tags_to_remove)
               AND NOT EXISTS (
-                  SELECT 1 FROM article_tags WHERE tag_id = tags.id AND article_id != $4
+                  SELECT 1 FROM articles_tags WHERE tag_id = tags.id AND article_id != $4
               )
         )
         SELECT 1;
@@ -163,7 +163,7 @@ pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Resu
             RETURNING id
         ),
         tags_to_delete AS (
-            DELETE FROM article_tags
+            DELETE FROM articles_tags
             WHERE article_id = $1
             RETURNING tag_id
         ),
@@ -171,8 +171,8 @@ pub fn delete_article(db_pool: &DbPool, author_id: i32, article_id: i32) -> Resu
              DELETE FROM tags
              WHERE tags.id IN (SELECT tag_id FROM tags_to_delete)
                  AND NOT EXISTS (
-                     SELECT 1 FROM article_tags
-                     WHERE article_tags.tag_id = tags.id AND article_tags.article_id != $1
+                     SELECT 1 FROM articles_tags
+                     WHERE articles_tags.tag_id = tags.id AND articles_tags.article_id != $1
                  )
              RETURNING id
         )
@@ -200,8 +200,8 @@ pub fn get_article(db_pool: &DbPool, article_id: i32) -> Result<ArticleEntry> {
             array_agg(tags.name) AS tags,
             users.username AS author_username
         FROM articles
-            LEFT JOIN article_tags ON articles.id = article_tags.article_id
-            LEFT JOIN tags ON tags.id = article_tags.tag_id
+            LEFT JOIN articles_tags ON articles.id = articles_tags.article_id
+            LEFT JOIN tags ON tags.id = articles_tags.tag_id
             LEFT JOIN users ON users.id = articles.author_id
         WHERE articles.id = $1
         GROUP BY articles.id, users.username

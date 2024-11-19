@@ -39,14 +39,14 @@ CREATE TABLE tags (
 
 CREATE INDEX CONCURRENTLY idx_tags_name ON tags (name);
 
-CREATE TABLE article_tags (
+CREATE TABLE articles_tags (
     article_id INTEGER NOT NULL REFERENCES articles(id),
     tag_id INTEGER NOT NULL REFERENCES tags(id),
     PRIMARY KEY (article_id, tag_id)
 );
 
-CREATE INDEX CONCURRENTLY idx_article_tags_article_id ON article_tags (article_id);
-CREATE INDEX CONCURRENTLY idx_article_tags_tag_id ON article_tags (tag_id);
+CREATE INDEX CONCURRENTLY idx_articles_tags_article_id ON articles_tags (article_id);
+CREATE INDEX CONCURRENTLY idx_articles_tags_tag_id ON articles_tags (tag_id);
 
 CREATE TABLE likes (
     id SERIAL PRIMARY KEY,
