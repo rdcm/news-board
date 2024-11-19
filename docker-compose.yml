@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres-pass
       POSTGRES_DB: news-api
     volumes:
-      - ./helm/news-board/sql:/docker-entrypoint-initdb.d:ro
+      - ./db-schema/sql:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     networks:
