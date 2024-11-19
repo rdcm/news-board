@@ -22,23 +22,11 @@ spec:
           ports:
             - containerPort: {{ .Values.postgres.port }}
           env:
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.postgres.name }}
-                  key: postgres-user
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.postgres.name }}
-                  key: postgres-password
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.postgres.name }}
-                  key: postgres-db
             - name: PGDATA
-              value: /var/lib/postgresql/data
+              value: {{ .Values.postgres.pgData }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.postgres.name }}
           volumeMounts:
             - name: {{ .Values.postgres.name }}-data
               mountPath: /var/lib/postgresql/data

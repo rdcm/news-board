@@ -7,6 +7,7 @@ postgres:
     password: postgres-pass
     db: news-api
   name: postgres
+  pgData: /var/lib/postgresql/data
   replicas: 1
   weight: 2
   port: 5432
